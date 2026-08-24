@@ -1,0 +1,121 @@
+import { useMemo } from 'react'
+import { useLibrary } from '../state/LibraryContext'
+import { usePlayer } from '../state/PlayerContext'
+import { ArtistCard, Shelf, SongCard } from '../components/Cards'
+import { Artwork } from '../components/Artwork'
+import { IconPlay } from '../components/Icons'
+import { stringHash } from '../lib/utils'
+import type { Song } from '../types'
+
+function greeting(): string {
+  const h = new Date().getHours()
+  if (h < 5) return '夜深了'
+  if (h < 12) return '早上好'
+  if (h < 18) return '下午好'
+  return '晚上好'
+}
+
+/** 以当天日期为种子的稳定乱序（每天推荐不同，但当天内一致） */
+function daySeededShuffle<T>(arr: T[], salt: string): T[] {
+  const day = new Date().toISOString().slice(0, 10)
+  return [...arr].sort(
+    (a, b) =>
+      (stringHash(day + salt + JSON.stringify((a as { id?: string }).id ?? a)) % 1000) -
+      (stringHash(day + salt + JSON.stringify((b as { id?: string }).id ?? b)) % 1000),
+  )
+}
+
+export function HomeView() {
+  const { songs, songById, artists, recents, recentlyAdded } = useLibrary()
+
+  const recentSongs = useMemo(
+    () => recents.map((id) => songById.get(id)).filter((s): s is Song => Boolean(s)).slice(0, 12),
+    [recents, songById],
+  )
+
+  const topArtists = useMemo(
+    () =>
+      daySeededShuffle(
+        [...artists].sort((a, b) => b.songs.length - a.songs.length).slice(0, 24),
+        'artists',
+      ).slice(0, 12),
+    [artists],
+  )
+
+  const dailyPicks = useMemo(() => daySeededShuffle(songs, 'picks').slice(0, 12), [songs])
+  const rediscover = useMemo(() => daySeededShuffle(songs, 'redis').slice(12, 24), [songs])
+  const newest = useMemo(() => recentlyAdded.slice(0, 12), [recentlyAdded])
+
+  return (
+    <div className="animate-fade-in-up">
+      <h1 className="mb-6 text-[28px] font-bold tracking-tight">{greeting()}</h1>
+
+      {/* 快捷入口宫格（Spotify 风格） */}
+      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-3">
+        {(recentSongs.length ? recentSongs : dailyPicks).slice(0, 6).map((song) => (
+          <QuickTile key={song.id} song={song} queue={recentSongs.length ? recentSongs : dailyPicks} />
+        ))}
+      </div>
+
+      {recentSongs.length > 0 && (
+        <Shelf title="最近播放">
+          {recentSongs.map((s) => (
+            <SongCard key={s.id} song={s} queue={recentSongs} />
+          ))}
+        </Shelf>
+      )}
+
+      <Shelf title="今日精选" subtitle="根据你的曲库每日更新">
+        {dailyPicks.map((s) => (
+          <SongCard key={s.id} song={s} queue={dailyPicks} />
+        ))}
+      </Shelf>
+
+      <Shelf title="热门艺人">
+        {topArtists.map((a) => (
+          <ArtistCard key={a.name} artist={a} />
+        ))}
+      </Shelf>
+
+      <Shelf title="重新发现" subtitle="从你的曲库中淘出的宝藏">
+        {rediscover.map((s) => (
+          <SongCard key={s.id} song={s} queue={rediscover} />
+        ))}
+      </Shelf>
+
+      <Shelf title="最近添加">
+        {newest.map((s) => (
+          <SongCard key={s.id} song={s} queue={newest} />
+        ))}
+      </Shelf>
+
+      <div className="pb-6 text-center text-xs text-text-tertiary">
+        共 {songs.length} 首歌曲 · 本地曲库
+      </div>
+    </div>
+  )
+}
+
+function QuickTile({ song, queue }: { song: Song; queue: Song[] }) {
+  const { playQueue } = usePlayer()
+  return (
+    <button
+      className="group flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg bg-white/6 pr-3 text-left transition-colors hover:bg-white/12"
+      onClick={() => playQueue(queue, queue.findIndex((s) => s.id === song.id))}
+    >
+      <Artwork
+        cover={song.cover}
+        seed={`${song.artist}·${song.title}`}
+        className="h-14 w-14 shrink-0"
+        rounded="rounded-l-lg rounded-r-none"
+      />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] font-semibold">{song.title}</span>
+        <span className="block truncate text-xs text-text-secondary">{song.artist}</span>
+      </span>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+        <IconPlay className="ml-0.5 h-4 w-4" />
+      </span>
+    </button>
+  )
+}
