@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useLibrary } from '../state/LibraryContext'
 import { usePlayer } from '../state/PlayerContext'
+import { useNav } from '../state/NavContext'
 import { ArtistCard, Shelf, SongCard } from '../components/Cards'
 import { Artwork } from '../components/Artwork'
 import { IconFolder, IconPlay } from '../components/Icons'
@@ -28,6 +29,7 @@ function daySeededShuffle<T>(arr: T[], salt: string): T[] {
 export function HomeView() {
   const { songs, songById, artists, recents, recentlyAdded, topSongs, libraryLoading, libraryHint, openMusicFolder } =
     useLibrary()
+  const { navigate } = useNav()
 
   const recentSongs = useMemo(
     () => recents.map((id) => songById.get(id)).filter((s): s is Song => Boolean(s)).slice(0, 12),
@@ -102,7 +104,7 @@ export function HomeView() {
       </div>
 
       {recentSongs.length > 0 && (
-        <Shelf title="最近播放">
+        <Shelf title="最近播放" onSeeAll={() => navigate({ type: 'recent' })}>
           {recentSongs.map((s) => (
             <SongCard key={s.id} song={s} queue={recentSongs} />
           ))}
@@ -110,7 +112,7 @@ export function HomeView() {
       )}
 
       {topSongs.length > 0 && (
-        <Shelf title="常听" subtitle="你最常播放的歌曲">
+        <Shelf title="常听" subtitle="你最常播放的歌曲" onSeeAll={() => navigate({ type: 'top' })}>
           {topSongs.slice(0, 12).map((s) => (
             <SongCard key={s.id} song={s} queue={topSongs} />
           ))}
@@ -123,7 +125,7 @@ export function HomeView() {
         ))}
       </Shelf>
 
-      <Shelf title="热门艺人">
+      <Shelf title="热门艺人" onSeeAll={() => navigate({ type: 'artists' })}>
         {topArtists.map((a) => (
           <ArtistCard key={a.name} artist={a} />
         ))}

@@ -105,121 +105,121 @@ export function PlayerBar({ onOpenNowPlaying, onToggleQueue, queueOpen }: Props)
 
   return (
     <footer className="relative z-30 flex h-21 shrink-0 items-center gap-4 border-t border-border bg-panel px-4 backdrop-blur-2xl">
-      {/* 左：当前歌曲 */}
-      <div className="flex w-[26%] min-w-55 items-center gap-3">
-        {current ? (
-          <>
-            <button
-              className="group relative shrink-0 cursor-pointer"
-              onClick={onOpenNowPlaying}
-              aria-label="打开正在播放"
-            >
-              <Artwork
-                cover={current.cover}
-                seed={current.artists[0]}
-                className="h-13.5 w-13.5"
-                rounded="rounded-lg"
-              />
-              <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                <IconExpand className="h-5 w-5 text-white" />
-              </span>
-            </button>
-            <div className="min-w-0">
-              <div className="truncate text-[13.5px] font-semibold">{current.title}</div>
-              <div className="truncate text-xs text-text-secondary">{artistLine(current)}</div>
-            </div>
-            <button
-              className={cx(
-                'shrink-0 cursor-pointer p-1 transition-colors',
-                isFavorite(current.id) ? 'text-accent' : 'text-text-tertiary hover:text-text-primary',
-              )}
-              onClick={() => toggleFavorite(current.id)}
-              aria-label="喜欢"
-            >
-              {isFavorite(current.id) ? (
-                <IconHeartFilled className="h-4.5 w-4.5" />
-              ) : (
-                <IconHeart className="h-4.5 w-4.5" />
-              )}
-            </button>
-          </>
-        ) : (
-          <div className="flex items-center gap-3 text-text-tertiary">
-            <div className="flex h-13.5 w-13.5 items-center justify-center rounded-lg bg-surface">
-              <IconPlay className="h-5 w-5" />
-            </div>
-            <span className="text-[13px]">未在播放</span>
-          </div>
-        )}
+      {/* 左：传输控制（Apple Music 桌面版布局：控件在左，信息面板居中） */}
+      <div className="flex shrink-0 items-center gap-3.5 pl-1 sm:gap-4">
+        <button
+          className={cx(
+            'hidden cursor-pointer p-1 transition-colors sm:block',
+            shuffle ? 'text-accent' : 'text-text-secondary hover:text-text-primary',
+          )}
+          onClick={toggleShuffle}
+          aria-label="随机播放"
+          title="随机播放"
+        >
+          <IconShuffle className="h-4.5 w-4.5" />
+        </button>
+        <button
+          className="cursor-pointer p-1 text-text-primary/90 transition hover:text-text-primary active:scale-90"
+          onClick={prev}
+          aria-label="上一首"
+        >
+          <IconPrev className="h-6 w-6" />
+        </button>
+        <button
+          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-accent text-white shadow-lg shadow-black/30 transition hover:scale-105 hover:brightness-110 active:scale-95"
+          onClick={toggle}
+          aria-label={isPlaying ? '暂停' : '播放'}
+        >
+          {isPlaying ? <IconPause className="h-5.5 w-5.5" /> : <IconPlay className="ml-0.5 h-5.5 w-5.5" />}
+        </button>
+        <button
+          className="cursor-pointer p-1 text-text-primary/90 transition hover:text-text-primary active:scale-90"
+          onClick={next}
+          aria-label="下一首"
+        >
+          <IconNext className="h-6 w-6" />
+        </button>
+        <button
+          className={cx(
+            'hidden cursor-pointer p-1 transition-colors sm:block',
+            repeat !== 'off' ? 'text-accent' : 'text-text-secondary hover:text-text-primary',
+          )}
+          onClick={cycleRepeat}
+          aria-label="循环模式"
+          title={repeat === 'off' ? '循环：关' : repeat === 'all' ? '循环：全部' : '循环：单曲'}
+        >
+          {repeat === 'one' ? <IconRepeatOne className="h-4.5 w-4.5" /> : <IconRepeat className="h-4.5 w-4.5" />}
+        </button>
       </div>
 
-      {/* 中：控制 + 进度 */}
-      <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-        <div className="flex items-center gap-5">
-          <button
-            className={cx(
-              'cursor-pointer p-1 transition-colors',
-              shuffle ? 'text-accent' : 'text-text-secondary hover:text-text-primary',
-            )}
-            onClick={toggleShuffle}
-            aria-label="随机播放"
-            title="随机播放"
-          >
-            <IconShuffle className="h-4.5 w-4.5" />
-          </button>
-          <button
-            className="cursor-pointer p-1 text-text-primary/90 transition hover:text-text-primary active:scale-90"
-            onClick={prev}
-            aria-label="上一首"
-          >
-            <IconPrev className="h-6 w-6" />
-          </button>
-          <button
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-accent text-white shadow-lg shadow-black/30 transition hover:scale-105 hover:brightness-110 active:scale-95"
-            onClick={toggle}
-            aria-label={isPlaying ? '暂停' : '播放'}
-          >
-            {isPlaying ? <IconPause className="h-5.5 w-5.5" /> : <IconPlay className="ml-0.5 h-5.5 w-5.5" />}
-          </button>
-          <button
-            className="cursor-pointer p-1 text-text-primary/90 transition hover:text-text-primary active:scale-90"
-            onClick={next}
-            aria-label="下一首"
-          >
-            <IconNext className="h-6 w-6" />
-          </button>
-          <button
-            className={cx(
-              'cursor-pointer p-1 transition-colors',
-              repeat !== 'off' ? 'text-accent' : 'text-text-secondary hover:text-text-primary',
-            )}
-            onClick={cycleRepeat}
-            aria-label="循环模式"
-            title={repeat === 'off' ? '循环：关' : repeat === 'all' ? '循环：全部' : '循环：单曲'}
-          >
-            {repeat === 'one' ? <IconRepeatOne className="h-4.5 w-4.5" /> : <IconRepeat className="h-4.5 w-4.5" />}
-          </button>
-        </div>
-
-        <div className="flex w-full max-w-140 items-center gap-2.5">
-          <span className="w-10 text-right text-[11px] tabular-nums text-text-tertiary">
-            {formatTime(currentTime)}
-          </span>
-          <input
-            type="range"
-            className="slider flex-1"
-            style={{ ['--fill' as string]: `${progress}%` }}
-            min={0}
-            max={dur || 1}
-            step={0.25}
-            value={Math.min(currentTime, dur || 1)}
-            onChange={(e) => seek(Number(e.target.value))}
-            disabled={!current}
-            aria-label="播放进度"
-          />
-          <span className="w-10 text-[11px] tabular-nums text-text-tertiary">
-            {formatTime(dur)}
-          </span>
+      {/* 中：LCD 信息面板（封面 + 标题 + 进度合为一个胶囊，Apple Music 风格） */}
+      <div className="flex min-w-0 flex-1 justify-center">
+        <div className="flex w-full max-w-155 items-center gap-3 rounded-xl border border-border bg-surface/50 px-2.5 py-1.5">
+          {current ? (
+            <>
+              <button
+                className="group relative shrink-0 cursor-pointer"
+                onClick={onOpenNowPlaying}
+                aria-label="打开正在播放"
+              >
+                <Artwork
+                  cover={current.cover}
+                  seed={current.artists[0]}
+                  className="h-11 w-11"
+                  rounded="rounded-md"
+                />
+                <span className="absolute inset-0 flex items-center justify-center rounded-md bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                  <IconExpand className="h-4.5 w-4.5 text-white" />
+                </span>
+              </button>
+              <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+                <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1 text-center">
+                    <div className="truncate text-[12.5px] font-semibold leading-tight">{current.title}</div>
+                    <div className="truncate text-[11px] leading-tight text-text-secondary">
+                      {artistLine(current)}
+                    </div>
+                  </div>
+                  <button
+                    className={cx(
+                      'shrink-0 cursor-pointer p-0.5 transition-colors',
+                      isFavorite(current.id) ? 'text-accent' : 'text-text-tertiary hover:text-text-primary',
+                    )}
+                    onClick={() => toggleFavorite(current.id)}
+                    aria-label="喜欢"
+                  >
+                    {isFavorite(current.id) ? (
+                      <IconHeartFilled className="h-4 w-4" />
+                    ) : (
+                      <IconHeart className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-8 text-right text-[10px] tabular-nums text-text-tertiary">
+                    {formatTime(currentTime)}
+                  </span>
+                  <input
+                    type="range"
+                    className="slider flex-1"
+                    style={{ ['--fill' as string]: `${progress}%` }}
+                    min={0}
+                    max={dur || 1}
+                    step={0.25}
+                    value={Math.min(currentTime, dur || 1)}
+                    onChange={(e) => seek(Number(e.target.value))}
+                    aria-label="播放进度"
+                  />
+                  <span className="w-8 text-[10px] tabular-nums text-text-tertiary">{formatTime(dur)}</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex w-full items-center justify-center gap-2 py-2 text-text-tertiary">
+              <IconPlay className="h-4 w-4" />
+              <span className="text-[12.5px]">未在播放</span>
+            </div>
+          )}
         </div>
       </div>
 

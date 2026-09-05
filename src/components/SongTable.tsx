@@ -328,8 +328,8 @@ function Row({
   return (
     <div
       className={cx(
-        'group flex items-center gap-3 rounded-lg px-3',
-        'hover:bg-surface',
+        'group mx-1 flex items-center gap-3 rounded-xl px-3',
+        'transition-colors hover:bg-surface',
         isCurrent && 'bg-surface',
         selectable && isSelected && 'bg-accent/15',
         isCursor && 'ring-1 ring-accent/50 ring-inset',
