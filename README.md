@@ -1,6 +1,7 @@
 # 音乐 — 本地曲库播放器
 
 [![在线体验](https://img.shields.io/badge/在线体验-bosswenwu.github.io-fa2d48?logo=apple&logoColor=white)](https://bosswenwu.github.io/music-player/)
+[![Windows 下载](https://img.shields.io/badge/Windows_下载-Releases-0078D6?logo=windows&logoColor=white)](https://github.com/bosswenwu/music-player/releases/latest)
 [![部署状态](https://github.com/bosswenwu/music-player/actions/workflows/pages.yml/badge.svg)](https://github.com/bosswenwu/music-player/actions/workflows/pages.yml)
 
 Apple Music 风格播放器。别人打开网页后点「选择音乐文件夹」，播的是**他们自己电脑里的歌**，不会播你的曲库，文件也不会上传。
