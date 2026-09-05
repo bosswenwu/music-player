@@ -3,7 +3,7 @@ import type { Lyrics, Song } from '../types'
 import { useLibrary } from '../state/LibraryContext'
 import { useLyricSync, usePlayer, usePlayerTime } from '../state/PlayerContext'
 import { extractColors, type CoverColors } from '../lib/color'
-import { artistLine, cx, formatTime, loadLocal, saveLocal } from '../lib/utils'
+import { artistLine, cx, formatTime, gradientFor, loadLocal, saveLocal } from '../lib/utils'
 import { Artwork } from './Artwork'
 import {
   IconChevronDown,
@@ -42,11 +42,14 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  // 主色提取
+  // 主色提取：有封面从图取色；无封面（占位渐变）用同一套渐变色，保证氛围背景始终有色彩
   useEffect(() => {
     let alive = true
-    if (current) {
+    if (current?.cover) {
       extractColors(current.cover).then((c) => alive && setColors(c))
+    } else if (current) {
+      const [a, b] = gradientFor(current.artists[0] ?? current.title)
+      setColors({ primary: a, secondary: b, accent: DEFAULT_COLORS.accent })
     }
     return () => {
       alive = false
@@ -56,7 +59,7 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
   if (!current) return null
 
   return (
-    <div className="absolute inset-0 z-50 overflow-hidden animate-np-enter">
+    <div className="fixed inset-0 z-50 overflow-hidden animate-np-enter">
       {/* 动态背景 */}
       <div
         className="absolute inset-0 transition-colors duration-1000"
