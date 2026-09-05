@@ -34,7 +34,7 @@ export function Sidebar() {
     songs,
     duplicateGroups,
   } = useLibrary()
-  const { view, navigate, back } = useNav()
+  const { view, navigate, navigateRoot, back } = useNav()
   const [query, setQuery] = useState('')
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
@@ -92,28 +92,28 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pb-4">
-        <NavItem view={view} target={{ type: 'home' }} navigate={navigate} icon={<IconHome className="h-4.5 w-4.5" />}>
+        <NavItem view={view} target={{ type: 'home' }} navigate={navigateRoot} icon={<IconHome className="h-4.5 w-4.5" />}>
           听一听
         </NavItem>
 
         <SectionTitle>资料库</SectionTitle>
-        <NavItem view={view} target={{ type: 'recent' }} navigate={navigate} icon={<IconClock className="h-4.5 w-4.5" />}>
+        <NavItem view={view} target={{ type: 'recent' }} navigate={navigateRoot} icon={<IconClock className="h-4.5 w-4.5" />}>
           最近播放
         </NavItem>
-        <NavItem view={view} target={{ type: 'top' }} navigate={navigate} icon={<IconTrendingUp className="h-4.5 w-4.5" />}>
+        <NavItem view={view} target={{ type: 'top' }} navigate={navigateRoot} icon={<IconTrendingUp className="h-4.5 w-4.5" />}>
           常听
         </NavItem>
-        <NavItem view={view} target={{ type: 'songs' }} navigate={navigate} icon={<IconMusicNote className="h-4.5 w-4.5" />}>
+        <NavItem view={view} target={{ type: 'songs' }} navigate={navigateRoot} icon={<IconMusicNote className="h-4.5 w-4.5" />}>
           歌曲
         </NavItem>
-        <NavItem view={view} target={{ type: 'quality' }} navigate={navigate} icon={<IconWaveform className="h-4.5 w-4.5" />}>
+        <NavItem view={view} target={{ type: 'quality' }} navigate={navigateRoot} icon={<IconWaveform className="h-4.5 w-4.5" />}>
           音质
         </NavItem>
         {duplicateGroups.length > 0 && (
           <NavItem
             view={view}
             target={{ type: 'duplicates' }}
-            navigate={navigate}
+            navigate={navigateRoot}
             icon={<IconAlbum className="h-4.5 w-4.5" />}
           >
             <span className="flex-1">重复歌曲</span>
@@ -122,13 +122,13 @@ export function Sidebar() {
             </span>
           </NavItem>
         )}
-        <NavItem view={view} target={{ type: 'artists' }} navigate={navigate} icon={<IconMic className="h-4.5 w-4.5" />}>
+        <NavItem view={view} target={{ type: 'artists' }} navigate={navigateRoot} icon={<IconMic className="h-4.5 w-4.5" />}>
           艺人
         </NavItem>
-        <NavItem view={view} target={{ type: 'albums' }} navigate={navigate} icon={<IconAlbum className="h-4.5 w-4.5" />}>
+        <NavItem view={view} target={{ type: 'albums' }} navigate={navigateRoot} icon={<IconAlbum className="h-4.5 w-4.5" />}>
           专辑
         </NavItem>
-        <NavItem view={view} target={{ type: 'favorites' }} navigate={navigate} icon={<IconHeart className="h-4.5 w-4.5" />}>
+        <NavItem view={view} target={{ type: 'favorites' }} navigate={navigateRoot} icon={<IconHeart className="h-4.5 w-4.5" />}>
           已喜欢的音乐
         </NavItem>
 
@@ -141,7 +141,7 @@ export function Sidebar() {
                   const name = await promptInput('新播放列表名称', '我的播放列表')
                   if (name?.trim()) {
                     const p = createPlaylist(name.trim())
-                    navigate({ type: 'playlist', id: p.id })
+                    navigateRoot({ type: 'playlist', id: p.id })
                   }
                 })()
               }}
@@ -163,7 +163,7 @@ export function Sidebar() {
               <NavItem
                 view={view}
                 target={{ type: 'playlist', id: p.id }}
-                navigate={navigate}
+                navigate={navigateRoot}
                 icon={
                   <PlaylistArtwork
                     covers={covers}

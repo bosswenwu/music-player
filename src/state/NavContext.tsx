@@ -6,6 +6,8 @@ interface NavContextValue {
   view: View
   canBack: boolean
   navigate: (view: View) => void
+  /** 顶级导航（侧边栏）：重置导航栈，不压栈，故顶级页面不会出现「返回」 */
+  navigateRoot: (view: View) => void
   back: () => void
 }
 
@@ -29,13 +31,20 @@ export function NavProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const navigateRoot = useCallback((next: View) => {
+    setStack((prev) => {
+      const cur = prev[prev.length - 1]
+      return prev.length === 1 && sameView(cur, next) ? prev : [next]
+    })
+  }, [])
+
   const back = useCallback(() => {
     setStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))
   }, [])
 
   const value = useMemo(
-    () => ({ view, canBack: stack.length > 1, navigate, back }),
-    [view, stack.length, navigate, back],
+    () => ({ view, canBack: stack.length > 1, navigate, navigateRoot, back }),
+    [view, stack.length, navigate, navigateRoot, back],
   )
 
   return <NavContext value={value}>{children}</NavContext>
