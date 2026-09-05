@@ -55,7 +55,7 @@ export function SongsView({ scrollRef }: { scrollRef: RefObject<HTMLElement | nu
               'cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors',
               sort === key
                 ? 'bg-accent text-white'
-                : 'bg-white/8 text-text-secondary hover:bg-white/14 hover:text-text-primary',
+                : 'bg-surface text-text-secondary hover:bg-surface-2 hover:text-text-primary',
             )}
             onClick={() => {
               if (sort === key) setAsc((v) => !v)

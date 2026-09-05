@@ -3,8 +3,8 @@ import { useLibrary } from '../state/LibraryContext'
 import { usePlayer } from '../state/PlayerContext'
 import { ArtistCard, Shelf, SongCard } from '../components/Cards'
 import { Artwork } from '../components/Artwork'
-import { IconPlay } from '../components/Icons'
-import { stringHash } from '../lib/utils'
+import { IconFolder, IconPlay } from '../components/Icons'
+import { artistLine, stringHash } from '../lib/utils'
 import type { Song } from '../types'
 
 function greeting(): string {
@@ -26,7 +26,8 @@ function daySeededShuffle<T>(arr: T[], salt: string): T[] {
 }
 
 export function HomeView() {
-  const { songs, songById, artists, recents, recentlyAdded } = useLibrary()
+  const { songs, songById, artists, recents, recentlyAdded, topSongs, libraryLoading, libraryHint, openMusicFolder } =
+    useLibrary()
 
   const recentSongs = useMemo(
     () => recents.map((id) => songById.get(id)).filter((s): s is Song => Boolean(s)).slice(0, 12),
@@ -46,14 +47,57 @@ export function HomeView() {
   const rediscover = useMemo(() => daySeededShuffle(songs, 'redis').slice(12, 24), [songs])
   const newest = useMemo(() => recentlyAdded.slice(0, 12), [recentlyAdded])
 
+  // 快捷宫格混排：最近播放 + 常听 + 今日精选，去重
+  const mixQuick = useMemo(() => {
+    const seen = new Set<string>()
+    const out: Song[] = []
+    for (const s of [...recentSongs, ...topSongs, ...dailyPicks]) {
+      if (seen.has(s.id)) continue
+      seen.add(s.id)
+      out.push(s)
+      if (out.length >= 6) break
+    }
+    return out
+  }, [recentSongs, topSongs, dailyPicks])
+
+  if (libraryLoading && songs.length === 0) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center text-text-secondary">
+        <p className="text-[15px]">正在读取你的音乐…</p>
+      </div>
+    )
+  }
+
+  if (songs.length === 0) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
+        <span className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#fb5c74] to-[#fa233b] shadow-lg shadow-[#fa233b]/30">
+          <IconFolder className="h-8 w-8 text-white" />
+        </span>
+        <h1 className="text-[28px] font-bold tracking-tight">打开你的音乐</h1>
+        <p className="mt-2 max-w-md text-[14px] leading-relaxed text-text-secondary">
+          选择电脑上的歌曲文件夹，马上就能播。文件不会上传，只在你这台电脑上播放。
+        </p>
+        <button
+          className="mt-6 cursor-pointer rounded-xl bg-accent px-6 py-2.5 text-[14px] font-semibold text-white shadow-md shadow-accent/25 transition hover:brightness-110 active:scale-95 disabled:opacity-60"
+          disabled={libraryLoading}
+          onClick={() => void openMusicFolder()}
+        >
+          {libraryLoading ? '正在读取…' : '选择音乐文件夹'}
+        </button>
+        {libraryHint ? <p className="mt-3 text-[13px] text-text-tertiary">{libraryHint}</p> : null}
+      </div>
+    )
+  }
+
   return (
     <div className="animate-fade-in-up">
       <h1 className="mb-6 text-[28px] font-bold tracking-tight">{greeting()}</h1>
 
-      {/* 快捷入口宫格（Spotify 风格） */}
+      {/* 快捷入口宫格（Spotify 风格，混排最近/常听/精选） */}
       <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-3">
-        {(recentSongs.length ? recentSongs : dailyPicks).slice(0, 6).map((song) => (
-          <QuickTile key={song.id} song={song} queue={recentSongs.length ? recentSongs : dailyPicks} />
+        {mixQuick.map((song) => (
+          <QuickTile key={song.id} song={song} queue={mixQuick} />
         ))}
       </div>
 
@@ -61,6 +105,14 @@ export function HomeView() {
         <Shelf title="最近播放">
           {recentSongs.map((s) => (
             <SongCard key={s.id} song={s} queue={recentSongs} />
+          ))}
+        </Shelf>
+      )}
+
+      {topSongs.length > 0 && (
+        <Shelf title="常听" subtitle="你最常播放的歌曲">
+          {topSongs.slice(0, 12).map((s) => (
+            <SongCard key={s.id} song={s} queue={topSongs} />
           ))}
         </Shelf>
       )}
@@ -100,7 +152,7 @@ function QuickTile({ song, queue }: { song: Song; queue: Song[] }) {
   const { playQueue } = usePlayer()
   return (
     <button
-      className="group flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg bg-white/6 pr-3 text-left transition-colors hover:bg-white/12"
+      className="group flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg bg-surface pr-3 text-left transition-colors hover:bg-surface-2"
       onClick={() => playQueue(queue, queue.findIndex((s) => s.id === song.id))}
     >
       <Artwork
@@ -111,7 +163,7 @@ function QuickTile({ song, queue }: { song: Song; queue: Song[] }) {
       />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13px] font-semibold">{song.title}</span>
-        <span className="block truncate text-xs text-text-secondary">{song.artist}</span>
+        <span className="block truncate text-xs text-text-secondary">{artistLine(song)}</span>
       </span>
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
         <IconPlay className="ml-0.5 h-4 w-4" />

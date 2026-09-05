@@ -180,6 +180,38 @@ export const IconClock = (p: P) => (
   </svg>
 )
 
+export const IconTrendingUp = (p: P) => (
+  <svg {...base(p)} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m3 17 6-6 4 4 8-8" />
+    <path d="M15 7h6v6" />
+  </svg>
+)
+
+export const IconSun = (p: P) => (
+  <svg {...base(p)} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </svg>
+)
+
+export const IconMoon = (p: P) => (
+  <svg {...base(p)} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+  </svg>
+)
+
+export const IconEqualizer = (p: P) => (
+  <svg {...base(p)} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+    <path d="M4 21v-6M4 11V3M10 21v-9M10 8V3M16 21v-4M16 13V3M22 21v-6M22 11V3" />
+  </svg>
+)
+
+export const IconWaveform = (p: P) => (
+  <svg {...base(p)} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+    <path d="M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2M21 12h0" />
+  </svg>
+)
+
 export const IconMic = (p: P) => (
   <svg {...base(p)} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="8" r="4" />
@@ -201,6 +233,12 @@ export const IconExpand = (p: P) => (
     <path d="M16 3h3a2 2 0 0 1 2 2v3" />
     <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
     <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+  </svg>
+)
+
+export const IconFolder = (p: P) => (
+  <svg {...base(p)} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h3.2c.4 0 .8.2 1.1.4L11.5 7H18.5A2.5 2.5 0 0 1 21 9.5v7A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5Z" />
   </svg>
 )
 

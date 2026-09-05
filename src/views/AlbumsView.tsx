@@ -7,7 +7,7 @@ import { Artwork } from '../components/Artwork'
 import { SongTable } from '../components/SongTable'
 import { PageHeader, EmptyState } from './shared'
 import { IconAlbum, IconChevronLeft } from '../components/Icons'
-import { formatTotalDuration } from '../lib/utils'
+import { formatTotalDuration, qualitySummary } from '../lib/utils'
 
 export function AlbumsView() {
   const { albums } = useLibrary()
@@ -72,6 +72,9 @@ export function AlbumDetail({
           <p className="mt-0.5 text-[13px] text-text-secondary">
             {album.songs.length} 首歌曲 · {formatTotalDuration(totalSec)}
           </p>
+          {qualitySummary(album.songs) && (
+            <p className="mt-0.5 text-[12px] text-text-tertiary">{qualitySummary(album.songs)}</p>
+          )}
         </div>
       </div>
 

@@ -1,0 +1,29 @@
+appId: com.bosswenwu.musicplayer
+productName: 音乐
+directories:
+  output: release
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+asar: true
+win:
+  icon: scripts/music.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  runAfterFinish: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 音乐
+  installerIcon: scripts/music.ico
+  uninstallerIcon: scripts/music.ico
+  installerLanguages:
+    - zh_CN
+    - en_US
+  language: 2052

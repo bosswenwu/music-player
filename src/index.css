@@ -12,8 +12,35 @@
   --color-text-primary: #f5f5f7;
   --color-text-secondary: rgba(245, 245, 247, 0.62);
   --color-text-tertiary: rgba(245, 245, 247, 0.36);
+  /* 表面层：暗色下用白色透明，亮色下用黑色透明 */
+  --color-surface: rgba(255, 255, 255, 0.08);
+  --color-surface-2: rgba(255, 255, 255, 0.14);
+  --color-surface-3: rgba(255, 255, 255, 0.2);
+  /* 面板（队列/菜单/对话框/播放条） */
+  --color-panel: rgba(31, 31, 31, 0.96);
+  --color-track: rgba(255, 255, 255, 0.18);
+  --color-thumb: rgba(255, 255, 255, 0.92);
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
     'PingFang SC', 'Segoe UI', 'Microsoft YaHei', sans-serif;
+}
+
+/* 亮色主题：运行时切换 html.light 类即可换肤 */
+html.light {
+  --color-bg: #f5f5f7;
+  --color-bg-elevated: #ffffff;
+  --color-sidebar: rgba(255, 255, 255, 0.94);
+  --color-card: #ffffff;
+  --color-card-hover: #efeff1;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-text-primary: #1d1d1f;
+  --color-text-secondary: rgba(60, 60, 67, 0.62);
+  --color-text-tertiary: rgba(60, 60, 67, 0.4);
+  --color-surface: rgba(0, 0, 0, 0.06);
+  --color-surface-2: rgba(0, 0, 0, 0.1);
+  --color-surface-3: rgba(0, 0, 0, 0.16);
+  --color-panel: rgba(255, 255, 255, 0.97);
+  --color-track: rgba(0, 0, 0, 0.14);
+  --color-thumb: rgba(0, 0, 0, 0.72);
 }
 
 html,
@@ -39,20 +66,20 @@ body {
 /* ---------- 滚动条 ---------- */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+  scrollbar-color: var(--color-surface-3) transparent;
 }
 *::-webkit-scrollbar {
   width: 9px;
   height: 9px;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--color-surface-3);
   border-radius: 9px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--color-text-tertiary);
   background-clip: content-box;
   border: 2px solid transparent;
 }
@@ -103,7 +130,7 @@ body {
 /* ---------- 进度条 / 音量条 ---------- */
 .slider {
   --fill: 0%;
-  --slider-color: rgba(255, 255, 255, 0.92);
+  --slider-color: var(--color-thumb);
   appearance: none;
   -webkit-appearance: none;
   width: 100%;
@@ -112,7 +139,7 @@ body {
   background: linear-gradient(
     to right,
     var(--slider-color) var(--fill),
-    rgba(255, 255, 255, 0.18) var(--fill)
+    var(--color-track) var(--fill)
   );
   outline: none;
   cursor: pointer;

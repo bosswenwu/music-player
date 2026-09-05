@@ -1,7 +1,9 @@
 import { useMemo, type RefObject } from 'react'
 import { useLibrary } from '../state/LibraryContext'
 import { usePlayer } from '../state/PlayerContext'
+import { promptInput } from '../lib/dialog'
 import { SongTable } from '../components/SongTable'
+import { PlaylistArtwork } from '../components/PlaylistArtwork'
 import { PageHeader, EmptyState } from './shared'
 import { IconClock, IconHeart, IconPlaylist } from '../components/Icons'
 import { formatTotalDuration } from '../lib/utils'
@@ -74,7 +76,7 @@ export function PlaylistView({
   id: string
   scrollRef: RefObject<HTMLElement | null>
 }) {
-  const { playlists, songById, removeFromPlaylist, renamePlaylist } = useLibrary()
+  const { playlists, songById, removeFromPlaylist, renamePlaylist, reorderPlaylist } = useLibrary()
   const { playQueue } = usePlayer()
   const playlist = playlists.find((p) => p.id === id)
 
@@ -91,12 +93,33 @@ export function PlaylistView({
   }
 
   const totalSec = songs.reduce((acc, s) => acc + s.duration, 0)
+  const covers = playlist.songIds.slice(0, 4).map((sid) => songById.get(sid)?.cover ?? null)
 
   return (
     <div className="animate-fade-in-up">
+      {/* 封面 + 标题头部（Apple Music 播放列表页风格） */}
+      <div className="mb-6 flex items-end gap-6">
+        <PlaylistArtwork
+          covers={covers}
+          seed={playlist.name}
+          className="h-48 w-48 shrink-0 shadow-xl shadow-black/30"
+          rounded="rounded-xl"
+        />
+        <div className="min-w-0 flex-1 pb-1">
+          <div className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+            播放列表
+          </div>
+          <h1 className="mt-1 truncate text-[36px] font-bold leading-tight tracking-tight">
+            {playlist.name}
+          </h1>
+          <p className="mt-0.5 text-[13px] text-text-secondary">
+            {songs.length} 首歌曲 · {formatTotalDuration(totalSec)}
+          </p>
+        </div>
+      </div>
+
       <PageHeader
-        title={playlist.name}
-        subtitle={`播放列表 · ${songs.length} 首歌曲 · ${formatTotalDuration(totalSec)}`}
+        title=""
         onPlay={songs.length ? () => playQueue(songs, 0, false) : undefined}
         onShuffle={
           songs.length
@@ -105,10 +128,12 @@ export function PlaylistView({
         }
         extra={
           <button
-            className="cursor-pointer rounded-lg bg-white/10 px-4 py-2 text-[13px] font-medium text-text-secondary transition hover:bg-white/15 hover:text-text-primary"
+            className="cursor-pointer rounded-lg bg-surface-2 px-4 py-2 text-[13px] font-medium text-text-secondary transition hover:bg-surface-2 hover:text-text-primary"
             onClick={() => {
-              const name = window.prompt('重命名播放列表', playlist.name)
-              if (name?.trim()) renamePlaylist(playlist.id, name.trim())
+              void (async () => {
+                const name = await promptInput('重命名播放列表', playlist.name)
+                if (name?.trim()) renamePlaylist(playlist.id, name.trim())
+              })()
             }}
           >
             重命名
@@ -119,6 +144,8 @@ export function PlaylistView({
         <SongTable
           songs={songs}
           scrollRef={scrollRef}
+          draggable
+          onReorder={(from, to) => reorderPlaylist(playlist.id, from, to)}
           onRemove={(song) => removeFromPlaylist(playlist.id, song.id)}
         />
       ) : (

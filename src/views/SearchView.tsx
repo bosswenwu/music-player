@@ -1,8 +1,9 @@
 import { useMemo, type RefObject } from 'react'
 import { useLibrary } from '../state/LibraryContext'
+import { usePlayer } from '../state/PlayerContext'
 import { SongTable } from '../components/SongTable'
 import { AlbumCard, ArtistCard, Shelf } from '../components/Cards'
-import { EmptyState } from './shared'
+import { EmptyState, PageHeader } from './shared'
 import { IconSearch } from '../components/Icons'
 
 export function SearchView({
@@ -13,16 +14,23 @@ export function SearchView({
   scrollRef: RefObject<HTMLElement | null>
 }) {
   const { search } = useLibrary()
+  const { playQueue } = usePlayer()
   const results = useMemo(() => search(query), [search, query])
 
   const empty = !results.songs.length && !results.artists.length && !results.albums.length
 
   return (
     <div className="animate-fade-in-up">
-      <h1 className="mb-1 text-[28px] font-bold tracking-tight">搜索</h1>
-      <p className="mb-6 text-[13px] text-text-secondary">
-        “{query}” 的结果 · {results.songs.length} 首歌曲
-      </p>
+      <PageHeader
+        title="搜索"
+        subtitle={`“${query}” 的结果 · ${results.songs.length} 首歌曲`}
+        onPlay={results.songs.length ? () => playQueue(results.songs, 0, false) : undefined}
+        onShuffle={
+          results.songs.length
+            ? () => playQueue(results.songs, Math.floor(Math.random() * results.songs.length), true)
+            : undefined
+        }
+      />
 
       {empty ? (
         <EmptyState icon={<IconSearch />} title={`未找到与“${query}”相关的内容`} hint="换个关键词试试" />

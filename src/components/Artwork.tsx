@@ -24,7 +24,9 @@ export const Artwork = memo(function Artwork({
   fallbackIcon = 'note',
   fallbackText,
 }: Props) {
-  const [broken, setBroken] = useState(false)
+  // 记录加载失败的封面；封面变化后派生值自动恢复，无需 effect 重置
+  const [brokenCover, setBrokenCover] = useState<string | null>(null)
+  const broken = cover != null && brokenCover === cover
 
   if (cover && !broken) {
     return (
@@ -33,7 +35,7 @@ export const Artwork = memo(function Artwork({
         alt={alt}
         loading="lazy"
         draggable={false}
-        onError={() => setBroken(true)}
+        onError={() => setBrokenCover(cover)}
         className={cx('object-cover shadow-md shadow-black/30', rounded, className)}
       />
     )

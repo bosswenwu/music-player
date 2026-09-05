@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+.edge-app-profile
+logs/
+release/
 
 # 扫描生成的曲库数据（运行 npm run scan 重新生成）
 public/covers/

@@ -33,7 +33,7 @@ export function PageHeader({
         )}
         {onShuffle && (
           <button
-            className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/10 px-5 py-2 text-[13px] font-semibold text-accent transition hover:bg-white/15 active:scale-95"
+            className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-surface-2 px-5 py-2 text-[13px] font-semibold text-accent transition hover:bg-surface-2 active:scale-95"
             onClick={onShuffle}
           >
             <IconShuffle className="h-4 w-4" />
@@ -45,12 +45,23 @@ export function PageHeader({
   )
 }
 
-export function EmptyState({ icon, title, hint }: { icon: ReactNode; title: string; hint?: string }) {
+export function EmptyState({
+  icon,
+  title,
+  hint,
+  action,
+}: {
+  icon: ReactNode
+  title: string
+  hint?: string
+  action?: ReactNode
+}) {
   return (
     <div className="flex h-[50vh] flex-col items-center justify-center gap-3 text-text-tertiary">
       <div className="[&>svg]:h-14 [&>svg]:w-14">{icon}</div>
       <div className="text-[15px] font-medium text-text-secondary">{title}</div>
-      {hint && <div className="text-[13px]">{hint}</div>}
+      {hint && <div className="max-w-sm text-center text-[13px] leading-relaxed">{hint}</div>}
+      {action}
     </div>
   )
 }

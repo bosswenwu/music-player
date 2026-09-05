@@ -1,17 +1,25 @@
 {
   "name": "music-player",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.mjs",
+  "author": "bosswenwu",
+  "description": "Apple Music style local music player",
   "scripts": {
     "dev": "vite",
     "scan": "node scripts/build-library.mjs",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "web": "node scripts/open-web.mjs",
+    "desktop": "node scripts/open-desktop.mjs",
+    "electron": "npm run build && electron .",
+    "dist:win": "npm run build && electron-builder --win nsis"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "music-metadata": "^11.15.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3"
@@ -21,7 +29,8 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
-    "music-metadata": "^11.15.0",
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3",
     "oxlint": "^1.79.0",
     "puppeteer-core": "^25.8.0",
     "typescript": "~6.0.2",

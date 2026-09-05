@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { LibraryProvider } from './state/LibraryContext'
 import { PlayerProvider, usePlayer } from './state/PlayerContext'
 import { NavProvider, useNav } from './state/NavContext'
 import { Sidebar } from './components/Sidebar'
 import { PlayerBar } from './components/PlayerBar'
-import { QueuePanel } from './components/QueuePanel'
-import { NowPlaying } from './components/NowPlaying'
+import { DialogHost } from './components/DialogHost'
 import { IconChevronLeft } from './components/Icons'
 import { HomeView } from './views/HomeView'
 import { SongsView } from './views/SongsView'
@@ -13,6 +12,13 @@ import { ArtistsView, ArtistDetail } from './views/ArtistsView'
 import { AlbumsView, AlbumDetail } from './views/AlbumsView'
 import { SearchView } from './views/SearchView'
 import { RecentView, FavoritesView, PlaylistView } from './views/ListViews'
+
+// 按需加载：弹层与二级视图仅在打开时才拉取对应代码块，减小首屏 bundle
+const NowPlaying = lazy(() => import('./components/NowPlaying').then((m) => ({ default: m.NowPlaying })))
+const QueuePanel = lazy(() => import('./components/QueuePanel').then((m) => ({ default: m.QueuePanel })))
+const TopView = lazy(() => import('./views/TopView').then((m) => ({ default: m.TopView })))
+const DuplicatesView = lazy(() => import('./views/DuplicatesView').then((m) => ({ default: m.DuplicatesView })))
+const QualityView = lazy(() => import('./views/QualityView').then((m) => ({ default: m.QualityView })))
 
 export default function App() {
   return (
@@ -58,12 +64,23 @@ function Shell() {
           else seek(Math.max(0, getTime() - 5))
           break
         case 'ArrowUp':
-          e.preventDefault()
-          setVolume(volume + 0.05)
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault()
+            setVolume(volume + 0.05)
+          }
           break
         case 'ArrowDown':
-          e.preventDefault()
-          setVolume(volume - 0.05)
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault()
+            setVolume(volume - 0.05)
+          }
+          break
+        case 'f':
+        case 'F':
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault()
+            ;(document.querySelector('aside input[placeholder="搜索"]') as HTMLInputElement | null)?.focus()
+          }
           break
       }
     }
@@ -91,11 +108,15 @@ function Shell() {
               返回
             </button>
           )}
-          <ViewSwitch mainRef={mainRef} />
+          <Suspense fallback={null}>
+            <ViewSwitch mainRef={mainRef} />
+          </Suspense>
         </main>
 
-        {queueOpen && <QueuePanel onClose={() => setQueueOpen(false)} />}
-        {nowPlayingOpen && current && <NowPlaying onClose={() => setNowPlayingOpen(false)} />}
+        <Suspense fallback={null}>
+          {queueOpen && <QueuePanel onClose={() => setQueueOpen(false)} />}
+          {nowPlayingOpen && current && <NowPlaying onClose={() => setNowPlayingOpen(false)} />}
+        </Suspense>
       </div>
 
       <PlayerBar
@@ -103,6 +124,8 @@ function Shell() {
         onToggleQueue={() => setQueueOpen((v) => !v)}
         queueOpen={queueOpen}
       />
+
+      <DialogHost />
     </div>
   )
 }
@@ -121,6 +144,12 @@ function ViewSwitch({ mainRef }: { mainRef: React.RefObject<HTMLElement | null> 
       return <AlbumsView />
     case 'recent':
       return <RecentView scrollRef={mainRef} />
+    case 'top':
+      return <TopView scrollRef={mainRef} />
+    case 'duplicates':
+      return <DuplicatesView scrollRef={mainRef} />
+    case 'quality':
+      return <QualityView scrollRef={mainRef} />
     case 'favorites':
       return <FavoritesView scrollRef={mainRef} />
     case 'search':

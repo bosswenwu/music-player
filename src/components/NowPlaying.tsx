@@ -1,14 +1,15 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import type { Lyrics, Song } from '../types'
 import { useLibrary } from '../state/LibraryContext'
-import { usePlayer, usePlayerTime } from '../state/PlayerContext'
+import { useLyricSync, usePlayer, usePlayerTime } from '../state/PlayerContext'
 import { extractColors, type CoverColors } from '../lib/color'
-import { cx, formatTime } from '../lib/utils'
+import { artistLine, cx, formatTime, loadLocal, saveLocal } from '../lib/utils'
 import { Artwork } from './Artwork'
 import {
   IconChevronDown,
   IconHeart,
   IconHeartFilled,
+  IconMusicNote,
   IconNext,
   IconPause,
   IconPlay,
@@ -28,8 +29,9 @@ const DEFAULT_COLORS: CoverColors = {
 
 export function NowPlaying({ onClose }: { onClose: () => void }) {
   const { current } = usePlayer()
+  const { lyrics, source: lyricSource, loading: lyricLoading, activeLine } = useLyricSync()
   const [colors, setColors] = useState<CoverColors>(DEFAULT_COLORS)
-  const [lyrics, setLyrics] = useState<Lyrics | null>(null)
+  const [showLyrics, setShowLyrics] = useState(true)
 
   // Esc 关闭
   useEffect(() => {
@@ -50,21 +52,6 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
       alive = false
     }
   }, [current?.cover, current])
-
-  // 歌词加载
-  useEffect(() => {
-    let alive = true
-    setLyrics(null)
-    if (current?.hasLyrics) {
-      fetch(`/lyrics/${current.id}.json`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => alive && setLyrics(data))
-        .catch(() => {})
-    }
-    return () => {
-      alive = false
-    }
-  }, [current?.id, current?.hasLyrics])
 
   if (!current) return null
 
@@ -95,7 +82,7 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
 
       {/* 内容 */}
       <div className="relative flex h-full flex-col">
-        <div className="flex items-center px-6 pt-5">
+        <div className="flex items-center justify-between px-6 pt-5">
           <button
             className="cursor-pointer rounded-full bg-white/10 p-2 text-white/85 backdrop-blur transition hover:bg-white/20"
             onClick={onClose}
@@ -103,16 +90,34 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
           >
             <IconChevronDown className="h-5 w-5" />
           </button>
+          {/* 歌词面板开关（Spotify / Apple Music 风格） */}
+          <button
+            className={cx(
+              'flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur transition',
+              showLyrics
+                ? 'bg-white/15 text-white'
+                : 'bg-white/5 text-white/55 hover:bg-white/10 hover:text-white/85',
+            )}
+            onClick={() => setShowLyrics((v) => !v)}
+            aria-label="切换歌词面板"
+          >
+            <IconMusicNote className="h-3.5 w-3.5" />
+            歌词
+          </button>
         </div>
 
         <div className="flex min-h-0 flex-1 items-center justify-center gap-14 px-10 pb-8 xl:gap-20">
           {/* 左：封面与控制 */}
-          <LeftPane song={current} accent={colors.accent} centered={!lyrics} />
+          <LeftPane song={current} accent={colors.accent} centered={!showLyrics} />
 
           {/* 右：歌词 */}
-          {lyrics && (
+          {showLyrics && (
             <div className="hidden h-full max-h-[78vh] w-[44%] min-w-0 max-w-150 md:block">
-              <LyricsPane lyrics={lyrics} accent={colors.accent} />
+              {lyrics ? (
+                <LyricsPane lyrics={lyrics} accent={colors.accent} source={lyricSource} activeLine={activeLine} />
+              ) : (
+                <LyricsEmpty loading={lyricLoading} />
+              )}
             </div>
           )}
         </div>
@@ -160,7 +165,7 @@ function LeftPane({ song, accent, centered }: { song: Song; accent: string; cent
         <div className="min-w-0">
           <div className="truncate text-[22px] font-bold text-white text-shadow-lg">{song.title}</div>
           <div className="truncate text-[15px] text-white/60">
-            {song.artist}
+            {artistLine(song)}
             {song.album ? ` — ${song.album}` : ''}
           </div>
         </div>
@@ -253,29 +258,45 @@ function LeftPane({ song, accent, centered }: { song: Song; accent: string; cent
 
 // ---------------------------------------------------------------- 歌词
 
-function LyricsPane({ lyrics, accent }: { lyrics: Lyrics; accent: string }) {
+function LyricsPane({
+  lyrics,
+  accent,
+  source,
+  activeLine,
+}: {
+  lyrics: Lyrics
+  accent: string
+  source: 'local' | 'online' | null
+  activeLine: number
+}) {
   const { seek, getTime } = usePlayer()
-  const [activeIdx, setActiveIdx] = useState(-1)
   const [wordCursor, setWordCursor] = useState(0)
+  const [fontScale, setFontScale] = useState<number>(() => loadLocal('mp.lyricFont', 100))
+  const [showTranslation, setShowTranslation] = useState<boolean>(() => loadLocal('mp.lyricTrans', true))
   const containerRef = useRef<HTMLDivElement>(null)
   const userScrollUntil = useRef(0)
 
-  // rAF 驱动的行/词高亮
+  const hasTranslation = (lyrics.translation ?? []).some((t) => t != null)
+  const baseFont = 26
+  const fontSize = Math.round((baseFont * fontScale) / 100)
+
+  const changeScale = (delta: number) => {
+    setFontScale((prev) => {
+      const next = Math.min(150, Math.max(70, prev + delta))
+      saveLocal('mp.lyricFont', next)
+      return next
+    })
+  }
+
+  // 词级逐字高亮（仅主窗口需要；行高亮由 PlayerProvider 提供）
   useEffect(() => {
+    if (lyrics.synced !== 'word') return
     let raf = 0
     let lastWordUpdate = 0
     const tick = (now: number) => {
-      const t = getTime()
-      const lines = lyrics.lines
-      let idx = -1
-      for (let i = 0; i < lines.length; i++) {
-        if (t >= lines[i].t - 0.15) idx = i
-        else break
-      }
-      setActiveIdx((prev) => (prev === idx ? prev : idx))
-      if (lyrics.synced === 'word' && now - lastWordUpdate > 80) {
+      if (now - lastWordUpdate > 80) {
         lastWordUpdate = now
-        setWordCursor(t)
+        setWordCursor(getTime())
       }
       raf = requestAnimationFrame(tick)
     }
@@ -285,36 +306,94 @@ function LyricsPane({ lyrics, accent }: { lyrics: Lyrics; accent: string }) {
 
   // 自动滚动到当前行（用户手动滚动后暂停 3.5 秒）
   useEffect(() => {
-    if (activeIdx < 0) return
+    if (activeLine < 0) return
     if (performance.now() < userScrollUntil.current) return
-    const el = containerRef.current?.querySelector(`[data-line="${activeIdx}"]`)
+    const el = containerRef.current?.querySelector(`[data-line="${activeLine}"]`)
     el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [activeIdx])
+  }, [activeLine])
 
   return (
-    <div
-      ref={containerRef}
-      className="h-full overflow-y-auto pr-4"
-      style={{ scrollbarWidth: 'none', maskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 86%, transparent 100%)' }}
-      onWheel={() => {
-        userScrollUntil.current = performance.now() + 3500
-      }}
-    >
-      <div className="h-[35%]" />
-      {lyrics.lines.map((line, i) => (
-        <LyricLineEl
-          key={i}
-          index={i}
-          text={line.text}
-          words={lyrics.synced === 'word' ? line.words : undefined}
-          active={i === activeIdx}
-          passed={i < activeIdx}
-          wordCursor={i === activeIdx ? wordCursor : 0}
-          accent={accent}
-          onClick={() => seek(line.t + 0.01)}
-        />
-      ))}
-      <div className="h-[40%]" />
+    <div className="relative h-full">
+      {/* 歌词控制：字号 + 翻译开关 */}
+      <div className="pointer-events-none absolute -top-2 left-0 z-10 flex items-center gap-1">
+        <button
+          className="pointer-events-auto cursor-pointer rounded-full bg-white/12 px-2 py-0.5 text-[11px] font-semibold text-white/70 backdrop-blur transition hover:bg-white/20 hover:text-white"
+          onClick={() => changeScale(-10)}
+          aria-label="缩小歌词"
+          title="缩小歌词字号"
+        >
+          A-
+        </button>
+        <button
+          className="pointer-events-auto cursor-pointer rounded-full bg-white/12 px-2 py-0.5 text-[11px] font-semibold text-white/70 backdrop-blur transition hover:bg-white/20 hover:text-white"
+          onClick={() => changeScale(10)}
+          aria-label="放大歌词"
+          title="放大歌词字号"
+        >
+          A+
+        </button>
+        {hasTranslation && (
+          <button
+            className={cx(
+              'pointer-events-auto cursor-pointer rounded-full px-2 py-0.5 text-[11px] font-semibold backdrop-blur transition',
+              showTranslation ? 'bg-white/20 text-white' : 'bg-white/8 text-white/45 hover:bg-white/15',
+            )}
+            onClick={() => {
+              setShowTranslation((v) => {
+                saveLocal('mp.lyricTrans', !v)
+                return !v
+              })
+            }}
+            aria-label="翻译开关"
+            title="显示/隐藏歌词翻译"
+          >
+            译
+          </button>
+        )}
+      </div>
+      {source === 'online' && (
+        <div className="pointer-events-none absolute -top-2 right-0 z-10 rounded-full bg-white/12 px-2.5 py-1 text-[10.5px] font-medium text-white/60 backdrop-blur">
+          网络歌词
+        </div>
+      )}
+      <div
+        ref={containerRef}
+        className="h-full overflow-y-auto pr-4 pt-4"
+        style={{ scrollbarWidth: 'none', maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 86%, transparent 100%)' }}
+        onWheel={() => {
+          userScrollUntil.current = performance.now() + 3500
+        }}
+      >
+        <div className="h-[35%]" />
+        {lyrics.lines.map((line, i) => (
+          <LyricLineEl
+            key={i}
+            index={i}
+            text={line.text}
+            words={lyrics.synced === 'word' ? line.words : undefined}
+            translation={showTranslation ? (lyrics.translation?.[i] ?? null) : null}
+            fontSize={fontSize}
+            active={i === activeLine}
+            passed={i < activeLine}
+            wordCursor={i === activeLine ? wordCursor : 0}
+            accent={accent}
+            onClick={() => seek(line.t + 0.01)}
+          />
+        ))}
+        <div className="h-[40%]" />
+      </div>
+    </div>
+  )
+}
+
+function LyricsEmpty({ loading }: { loading: boolean }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 text-white/45">
+      <IconMusicNote className="h-10 w-10 opacity-60" />
+      <div className="text-sm">{loading ? '正在查找歌词…' : '暂无歌词'}</div>
+      <div className="max-w-60 text-center text-xs leading-relaxed opacity-70">
+        {loading ? '正在从网络获取…' : '这首歌暂时没有找到歌词，试试换一首'}
+      </div>
     </div>
   )
 }
@@ -323,6 +402,8 @@ const LyricLineEl = memo(function LyricLineEl({
   index,
   text,
   words,
+  translation,
+  fontSize,
   active,
   passed,
   wordCursor,
@@ -332,6 +413,8 @@ const LyricLineEl = memo(function LyricLineEl({
   index: number
   text: string
   words?: Array<{ t: number; d: number; text: string }>
+  translation?: string | null
+  fontSize: number
   active: boolean
   passed: boolean
   wordCursor: number
@@ -343,7 +426,8 @@ const LyricLineEl = memo(function LyricLineEl({
       data-line={index}
       data-active={active || undefined}
       data-passed={passed || undefined}
-      className="lyric-line py-2.5 text-[26px] font-bold leading-snug tracking-tight text-white xl:text-[30px]"
+      className="lyric-line py-2.5 font-bold leading-snug tracking-tight text-white"
+      style={{ fontSize }}
       onClick={onClick}
     >
       {active && words ? (
@@ -361,6 +445,17 @@ const LyricLineEl = memo(function LyricLineEl({
       ) : (
         <span>{text}</span>
       )}
+      {translation ? (
+        <div
+          className={cx(
+            'mt-0.5 font-medium leading-snug text-white/55',
+            active && 'text-white/75',
+          )}
+          style={{ fontSize: Math.round(fontSize * 0.62) }}
+        >
+          {translation}
+        </div>
+      ) : null}
     </div>
   )
 })

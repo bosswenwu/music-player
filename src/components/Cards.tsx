@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import type { AlbumGroup, ArtistGroup, Song } from '../types'
-import { cx } from '../lib/utils'
+import { artistLine, cx } from '../lib/utils'
+import { getArtistPhoto } from '../lib/artistPhoto'
 import { usePlayer } from '../state/PlayerContext'
 import { useNav } from '../state/NavContext'
 import { Artwork } from './Artwork'
@@ -54,13 +56,13 @@ export function SongCard({ song, queue }: { song: Song; queue: Song[] }) {
         <Artwork
           cover={song.cover}
           seed={`${song.artist}·${song.title}`}
-          className="aspect-square w-full transition-transform duration-200 group-hover:scale-[1.02]"
+          className="aspect-square w-full transition-all duration-200 group-hover:scale-[1.03] group-hover:shadow-xl group-hover:shadow-black/40"
           rounded="rounded-xl"
         />
         <HoverPlay onClick={play} playing={isCurrent && isPlaying} className="bottom-2.5 right-2.5" />
       </div>
       <div className="mt-2 truncate text-[13px] font-medium">{song.title}</div>
-      <div className="truncate text-xs text-text-secondary">{song.artist}</div>
+      <div className="truncate text-xs text-text-secondary">{artistLine(song)}</div>
     </div>
   )
 }
@@ -70,6 +72,15 @@ export function SongCard({ song, queue }: { song: Song; queue: Song[] }) {
 export function ArtistCard({ artist }: { artist: ArtistGroup }) {
   const { navigate } = useNav()
   const { playQueue } = usePlayer()
+  const [photo, setPhoto] = useState<string | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    void getArtistPhoto(artist.name).then((u) => alive && setPhoto(u))
+    return () => {
+      alive = false
+    }
+  }, [artist.name])
 
   return (
     <div
@@ -78,9 +89,9 @@ export function ArtistCard({ artist }: { artist: ArtistGroup }) {
     >
       <div className="relative">
         <Artwork
-          cover={artist.cover}
+          cover={photo ?? artist.cover}
           seed={artist.name}
-          className="aspect-square w-full transition-transform duration-200 group-hover:scale-[1.02]"
+          className="aspect-square w-full transition-all duration-200 group-hover:scale-[1.03] group-hover:shadow-xl group-hover:shadow-black/40"
           rounded="rounded-full"
           fallbackIcon="artist"
         />
@@ -112,7 +123,7 @@ export function AlbumCard({ album }: { album: AlbumGroup }) {
         <Artwork
           cover={album.cover}
           seed={album.name}
-          className="aspect-square w-full transition-transform duration-200 group-hover:scale-[1.02]"
+          className="aspect-square w-full transition-all duration-200 group-hover:scale-[1.03] group-hover:shadow-xl group-hover:shadow-black/40"
           rounded="rounded-xl"
         />
         <HoverPlay onClick={() => playQueue(album.songs, 0)} className="bottom-2.5 right-2.5" />

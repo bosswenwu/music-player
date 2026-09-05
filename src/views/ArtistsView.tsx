@@ -1,4 +1,4 @@
-import { useMemo, type RefObject } from 'react'
+import { useEffect, useMemo, useState, type RefObject } from 'react'
 import { useLibrary } from '../state/LibraryContext'
 import { usePlayer } from '../state/PlayerContext'
 import { useNav } from '../state/NavContext'
@@ -7,7 +7,8 @@ import { Artwork } from '../components/Artwork'
 import { SongTable } from '../components/SongTable'
 import { PageHeader, EmptyState } from './shared'
 import { IconMic, IconChevronLeft } from '../components/Icons'
-import { formatTotalDuration } from '../lib/utils'
+import { formatTotalDuration, qualitySummary } from '../lib/utils'
+import { getArtistPhoto } from '../lib/artistPhoto'
 
 export function ArtistsView() {
   const { artists } = useLibrary()
@@ -44,6 +45,16 @@ export function ArtistDetail({
   const { playQueue } = usePlayer()
   const { back } = useNav()
   const artist = artistByName.get(name)
+  const [photo, setPhoto] = useState<string | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    setPhoto(null)
+    void getArtistPhoto(name).then((u) => alive && setPhoto(u))
+    return () => {
+      alive = false
+    }
+  }, [name])
 
   if (!artist) {
     return <EmptyState icon={<IconMic />} title="未找到该艺人" />
@@ -63,7 +74,7 @@ export function ArtistDetail({
 
       <div className="mb-6 flex items-end gap-6">
         <Artwork
-          cover={artist.cover}
+          cover={photo ?? artist.cover}
           seed={artist.name}
           className="h-44 w-44 shrink-0"
           rounded="rounded-full"
@@ -77,6 +88,9 @@ export function ArtistDetail({
           <p className="mt-1 text-[13px] text-text-secondary">
             {artist.songs.length} 首歌曲 · {formatTotalDuration(totalSec)}
           </p>
+          {qualitySummary(artist.songs) && (
+            <p className="mt-0.5 text-[12px] text-text-tertiary">{qualitySummary(artist.songs)}</p>
+          )}
         </div>
       </div>
 

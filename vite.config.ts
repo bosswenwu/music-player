@@ -3,9 +3,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import fs from 'node:fs'
 import path from 'node:path'
+import { resolveMusicRoot } from './scripts/music-root.mjs'
 
 /** 本地曲库根目录，通过 /audio/** 挂载给浏览器（不复制文件）；可用环境变量 MUSIC_ROOT 覆盖 */
-const MUSIC_ROOT = process.env.MUSIC_ROOT || 'F:/照片/KuGou'
+const MUSIC_ROOT = resolveMusicRoot()
 
 const MIME: Record<string, string> = {
   '.mp3': 'audio/mpeg',
@@ -77,5 +78,14 @@ function serveLocalAudio(): Plugin {
 }
 
 export default defineConfig({
+  base: './',
   plugins: [react(), tailwindcss(), serveLocalAudio()],
+  server: {
+    host: '127.0.0.1',
+    port: 5173,
+    strictPort: true,
+    watch: {
+      ignored: ['**/.edge-app-profile/**', '**/node_modules/**', '**/logs/**', '**/release/**'],
+    },
+  },
 })
