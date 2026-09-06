@@ -19,6 +19,7 @@ export interface SearchResults {
   albums: AlbumGroup[]
 }
 
+/** 稳定的曲库数据：仅在换文件夹/重扫时变化 */
 interface LibraryContextValue {
   songs: Song[]
   songById: Map<string, Song>
@@ -27,10 +28,20 @@ interface LibraryContextValue {
   albums: AlbumGroup[]
   albumByKey: Map<string, AlbumGroup>
   recentlyAdded: Song[]
+  /** 重复歌曲分组（艺人+标题相同的多首） */
+  duplicateGroups: Song[][]
+  search: (query: string) => SearchResults
   libraryLoading: boolean
   libraryHint: string | null
   openMusicFolder: () => Promise<void>
+}
 
+/**
+ * 易变的用户数据（收藏 / 播放列表 / 最近播放 / 播放次数）。
+ * 与稳定库数据拆成独立 Context：收藏或播放列表变化时，只订阅 useUserData 的组件重渲染，
+ * 只用曲库数据（如歌曲列表容器、搜索页）不受影响。
+ */
+interface UserDataContextValue {
   favorites: string[]
   isFavorite: (id: string) => boolean
   toggleFavorite: (id: string) => void
@@ -53,13 +64,10 @@ interface LibraryContextValue {
   playCountOf: (id: string) => number
   /** 按播放次数排序的常听歌曲 */
   topSongs: Song[]
-  /** 重复歌曲分组（艺人+标题相同的多首） */
-  duplicateGroups: Song[][]
-
-  search: (query: string) => SearchResults
 }
 
 const LibraryContext = createContext<LibraryContextValue | null>(null)
+const UserDataContext = createContext<UserDataContextValue | null>(null)
 
 export function LibraryProvider({ children }: { children: ReactNode }) {
   const [folderSongs, setFolderSongs] = useState<Song[] | null>(null)
@@ -398,8 +406,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     [searchIndex, artists, albums],
   )
 
-  // memo：避免 Provider 每次重渲染都新建 value 导致全部 useLibrary 消费者重渲染
-  const value = useMemo<LibraryContextValue>(
+  // 稳定库数据：仅换文件夹/重扫时变化
+  const libraryValue = useMemo<LibraryContextValue>(
     () => ({
       songs,
       songById,
@@ -408,6 +416,21 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       albums,
       albumByKey,
       recentlyAdded,
+      duplicateGroups,
+      search,
+      libraryLoading,
+      libraryHint,
+      openMusicFolder,
+    }),
+    [
+      songs, songById, artists, artistByName, albums, albumByKey, recentlyAdded,
+      duplicateGroups, search, libraryLoading, libraryHint, openMusicFolder,
+    ],
+  )
+
+  // 易变用户数据：收藏/播放列表/最近/播放次数变化只影响订阅它的组件
+  const userDataValue = useMemo<UserDataContextValue>(
+    () => ({
       favorites,
       isFavorite,
       toggleFavorite,
@@ -425,27 +448,30 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       playCounts,
       playCountOf,
       topSongs,
-      duplicateGroups,
-      search,
-      libraryLoading,
-      libraryHint,
-      openMusicFolder,
     }),
     [
-      songs, songById, artists, artistByName, albums, albumByKey, recentlyAdded,
       favorites, isFavorite, toggleFavorite, bulkSetFavorite,
       playlists, createPlaylist, deletePlaylist, renamePlaylist, addToPlaylist,
       addSongsToPlaylist, removeFromPlaylist, reorderPlaylist,
-      recents, notePlayed, playCounts, playCountOf, topSongs, duplicateGroups,
-      search, libraryLoading, libraryHint, openMusicFolder,
+      recents, notePlayed, playCounts, playCountOf, topSongs,
     ],
   )
 
-  return <LibraryContext value={value}>{children}</LibraryContext>
+  return (
+    <LibraryContext value={libraryValue}>
+      <UserDataContext value={userDataValue}>{children}</UserDataContext>
+    </LibraryContext>
+  )
 }
 
 export function useLibrary(): LibraryContextValue {
   const ctx = use(LibraryContext)
   if (!ctx) throw new Error('useLibrary must be used within LibraryProvider')
+  return ctx
+}
+
+export function useUserData(): UserDataContextValue {
+  const ctx = use(UserDataContext)
+  if (!ctx) throw new Error('useUserData must be used within LibraryProvider')
   return ctx
 }

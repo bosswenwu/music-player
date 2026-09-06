@@ -1,5 +1,5 @@
 import { useMemo, type RefObject } from 'react'
-import { useLibrary } from '../state/LibraryContext'
+import { useUserData } from '../state/LibraryContext'
 import { usePlayer } from '../state/PlayerContext'
 import { SongTable } from '../components/SongTable'
 import { PageHeader, EmptyState } from './shared'
@@ -7,7 +7,7 @@ import { IconTrendingUp } from '../components/Icons'
 
 /** 常听：按累计播放次数排序（Apple Music Replay / Spotify On Repeat 风格） */
 export function TopView({ scrollRef }: { scrollRef: RefObject<HTMLElement | null> }) {
-  const { topSongs, playCounts } = useLibrary()
+  const { topSongs, playCounts } = useUserData()
   const { playQueue } = usePlayer()
 
   const totalPlays = useMemo(

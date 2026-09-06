@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { cx } from '../lib/utils'
 import { confirmDialog, promptInput } from '../lib/dialog'
 import { applyTheme, getInitialTheme, type Theme } from '../lib/theme'
-import { useLibrary } from '../state/LibraryContext'
+import { useLibrary, useUserData } from '../state/LibraryContext'
 import { useNav } from '../state/NavContext'
 import { PlaylistArtwork } from './PlaylistArtwork'
 import type { View } from '../types'
@@ -24,16 +24,8 @@ import {
 } from './Icons'
 
 export function Sidebar() {
-  const {
-    playlists,
-    songById,
-    createPlaylist,
-    deletePlaylist,
-    openMusicFolder,
-    libraryLoading,
-    songs,
-    duplicateGroups,
-  } = useLibrary()
+  const { songById, openMusicFolder, libraryLoading, songs, duplicateGroups } = useLibrary()
+  const { playlists, createPlaylist, deletePlaylist } = useUserData()
   const { view, navigate, navigateRoot, back } = useNav()
   const [query, setQuery] = useState('')
   const [theme, setTheme] = useState<Theme>(getInitialTheme)

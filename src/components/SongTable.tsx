@@ -9,7 +9,7 @@ import {
 import type { Song, SongQuality } from '../types'
 import { artistLine, cx, formatTime, qualityLabel, qualityTier } from '../lib/utils'
 import { confirmDialog, promptInput } from '../lib/dialog'
-import { useLibrary } from '../state/LibraryContext'
+import { useUserData } from '../state/LibraryContext'
 import { usePlayer } from '../state/PlayerContext'
 import { useNav } from '../state/NavContext'
 import { Artwork } from './Artwork'
@@ -48,7 +48,7 @@ interface MenuState {
 
 export function SongTable({ songs, showAlbum = true, scrollRef, onRemove, draggable = false, onReorder, selectable = true }: Props) {
   const { current, isPlaying, playQueue, toggle } = usePlayer()
-  const { bulkSetFavorite } = useLibrary()
+  const { bulkSetFavorite } = useUserData()
   const [menu, setMenu] = useState<MenuState | null>(null)
   const [dragFrom, setDragFrom] = useState<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)
@@ -321,7 +321,7 @@ function Row({
   onPlay,
   onMenu,
 }: RowProps) {
-  const { isFavorite, toggleFavorite } = useLibrary()
+  const { isFavorite, toggleFavorite } = useUserData()
   const { navigate } = useNav()
   const fav = isFavorite(song.id)
 
@@ -455,7 +455,7 @@ function RowMenu({
 }) {
   const { song } = state
   const { playNext, addToQueue } = usePlayer()
-  const { isFavorite, toggleFavorite, playlists, addToPlaylist, createPlaylist } = useLibrary()
+  const { isFavorite, toggleFavorite, playlists, addToPlaylist, createPlaylist } = useUserData()
   const { navigate } = useNav()
   const [showPlaylists, setShowPlaylists] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -569,7 +569,7 @@ function SelectionBar({
   onRemoveAll: () => void
   canRemove: boolean
 }) {
-  const { playlists, addSongsToPlaylist, createPlaylist } = useLibrary()
+  const { playlists, addSongsToPlaylist, createPlaylist } = useUserData()
   const [showPlaylists, setShowPlaylists] = useState(false)
   const allSelected = count === total
 

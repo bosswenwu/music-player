@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useLibrary } from '../state/LibraryContext'
+import { useLibrary, useUserData } from '../state/LibraryContext'
 import { usePlayer } from '../state/PlayerContext'
 import { useNav } from '../state/NavContext'
 import { ArtistCard, Shelf, SongCard } from '../components/Cards'
@@ -30,8 +30,8 @@ function daySeededShuffle<T>(arr: T[], salt: string): T[] {
 }
 
 export function HomeView() {
-  const { songs, songById, artists, recents, recentlyAdded, topSongs, libraryLoading, libraryHint, openMusicFolder } =
-    useLibrary()
+  const { songs, songById, artists, recentlyAdded, libraryLoading, libraryHint, openMusicFolder } = useLibrary()
+  const { recents, topSongs } = useUserData()
   const { navigate } = useNav()
 
   const recentSongs = useMemo(

@@ -12,7 +12,7 @@ import {
 import type { Lyrics, RepeatMode, Song } from '../types'
 import { audioUrl, loadLocal, saveLocal, shuffleArray } from '../lib/utils'
 import { fetchOnlineLyricsFor } from '../lib/onlineLyrics'
-import { useLibrary } from './LibraryContext'
+import { useLibrary, useUserData } from './LibraryContext'
 
 interface PlayerContextValue {
   queue: Song[]
@@ -83,7 +83,8 @@ const LyricSyncContext = createContext<LyricSyncValue>({
 })
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
-  const { songById, notePlayed } = useLibrary()
+  const { songById } = useLibrary()
+  const { notePlayed } = useUserData()
 
   const [audio] = useState(() => {
     const a = new Audio()

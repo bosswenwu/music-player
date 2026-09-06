@@ -1,5 +1,5 @@
 import { useMemo, type RefObject } from 'react'
-import { useLibrary } from '../state/LibraryContext'
+import { useLibrary, useUserData } from '../state/LibraryContext'
 import { usePlayer } from '../state/PlayerContext'
 import { promptInput } from '../lib/dialog'
 import { SongTable } from '../components/SongTable'
@@ -10,7 +10,8 @@ import { formatTotalDuration } from '../lib/utils'
 import type { Song } from '../types'
 
 export function RecentView({ scrollRef }: { scrollRef: RefObject<HTMLElement | null> }) {
-  const { recents, songById } = useLibrary()
+  const { songById } = useLibrary()
+  const { recents } = useUserData()
   const { playQueue } = usePlayer()
 
   const songs = useMemo(
@@ -36,7 +37,8 @@ export function RecentView({ scrollRef }: { scrollRef: RefObject<HTMLElement | n
 }
 
 export function FavoritesView({ scrollRef }: { scrollRef: RefObject<HTMLElement | null> }) {
-  const { favorites, songById } = useLibrary()
+  const { songById } = useLibrary()
+  const { favorites } = useUserData()
   const { playQueue } = usePlayer()
 
   const songs = useMemo(
@@ -76,7 +78,8 @@ export function PlaylistView({
   id: string
   scrollRef: RefObject<HTMLElement | null>
 }) {
-  const { playlists, songById, removeFromPlaylist, renamePlaylist, reorderPlaylist } = useLibrary()
+  const { songById } = useLibrary()
+  const { playlists, removeFromPlaylist, renamePlaylist, reorderPlaylist } = useUserData()
   const { playQueue } = usePlayer()
   const playlist = playlists.find((p) => p.id === id)
 

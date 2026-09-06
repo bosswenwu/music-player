@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLibrary } from '../state/LibraryContext'
+import { useUserData } from '../state/LibraryContext'
 import { EQ_PRESETS, usePlayer, usePlayerTime } from '../state/PlayerContext'
 import { artistLine, cx, formatTime, loadLocal, saveLocal } from '../lib/utils'
 import { Artwork } from './Artwork'
@@ -35,7 +35,7 @@ export function PlayerBar({ onOpenNowPlaying, onToggleQueue, queueOpen }: Props)
     toggle, next, prev, seek, setVolume, setRate, setEq, toggleShuffle, cycleRepeat,
   } = usePlayer()
   const { currentTime, duration } = usePlayerTime()
-  const { isFavorite, toggleFavorite } = useLibrary()
+  const { isFavorite, toggleFavorite } = useUserData()
 
   const dur = duration || current?.duration || 0
   const progress = dur > 0 ? (currentTime / dur) * 100 : 0

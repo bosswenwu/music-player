@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import type { Lyrics, Song } from '../types'
-import { useLibrary } from '../state/LibraryContext'
+import { useUserData } from '../state/LibraryContext'
 import { useLyricSync, usePlayer, usePlayerTime } from '../state/PlayerContext'
 import { extractColors, type CoverColors } from '../lib/color'
 import { artistLine, cx, formatTime, gradientFor, loadLocal, saveLocal } from '../lib/utils'
@@ -137,7 +137,7 @@ function LeftPane({ song, accent, centered }: { song: Song; accent: string; cent
     toggle, next, prev, seek, setVolume, toggleShuffle, cycleRepeat,
   } = usePlayer()
   const { currentTime, duration } = usePlayerTime()
-  const { isFavorite, toggleFavorite } = useLibrary()
+  const { isFavorite, toggleFavorite } = useUserData()
 
   const dur = duration || song.duration || 0
   const progress = dur > 0 ? (currentTime / dur) * 100 : 0
