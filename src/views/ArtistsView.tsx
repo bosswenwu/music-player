@@ -61,6 +61,7 @@ export function ArtistDetail({
   }
 
   const totalSec = artist.songs.reduce((acc, s) => acc + s.duration, 0)
+  const quality = qualitySummary(artist.songs)
 
   return (
     <div className="animate-fade-in-up">
@@ -88,9 +89,7 @@ export function ArtistDetail({
           <p className="mt-1 text-[13px] text-text-secondary">
             {artist.songs.length} 首歌曲 · {formatTotalDuration(totalSec)}
           </p>
-          {qualitySummary(artist.songs) && (
-            <p className="mt-0.5 text-[12px] text-text-tertiary">{qualitySummary(artist.songs)}</p>
-          )}
+          {quality && <p className="mt-0.5 text-[12px] text-text-tertiary">{quality}</p>}
         </div>
       </div>
 

@@ -19,11 +19,14 @@ function greeting(): string {
 /** 以当天日期为种子的稳定乱序（每天推荐不同，但当天内一致） */
 function daySeededShuffle<T>(arr: T[], salt: string): T[] {
   const day = new Date().toISOString().slice(0, 10)
-  return [...arr].sort(
-    (a, b) =>
-      (stringHash(day + salt + JSON.stringify((a as { id?: string }).id ?? a)) % 1000) -
-      (stringHash(day + salt + JSON.stringify((b as { id?: string }).id ?? b)) % 1000),
-  )
+  // 预计算排序键：每个元素只哈希一次，避免比较器里重复 stringHash + JSON.stringify
+  return arr
+    .map((item) => ({
+      item,
+      key: stringHash(day + salt + JSON.stringify((item as { id?: string }).id ?? item)) % 1000,
+    }))
+    .sort((a, b) => a.key - b.key)
+    .map((x) => x.item)
 }
 
 export function HomeView() {

@@ -45,6 +45,7 @@ export function AlbumDetail({
   }
 
   const totalSec = album.songs.reduce((acc, s) => acc + s.duration, 0)
+  const quality = qualitySummary(album.songs)
 
   return (
     <div className="animate-fade-in-up">
@@ -72,9 +73,7 @@ export function AlbumDetail({
           <p className="mt-0.5 text-[13px] text-text-secondary">
             {album.songs.length} 首歌曲 · {formatTotalDuration(totalSec)}
           </p>
-          {qualitySummary(album.songs) && (
-            <p className="mt-0.5 text-[12px] text-text-tertiary">{qualitySummary(album.songs)}</p>
-          )}
+          {quality && <p className="mt-0.5 text-[12px] text-text-tertiary">{quality}</p>}
         </div>
       </div>
 
