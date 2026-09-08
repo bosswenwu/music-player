@@ -24,7 +24,10 @@ jobs:
         run: npm ci
 
       - name: Build Windows installer
-        run: npm run dist:win
+        # 只构建，不让 electron-builder 自动 publish（否则会因缺 GH_TOKEN 失败）
+        run: |
+          npm run build
+          npx electron-builder --win nsis --publish never
 
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
