@@ -1,0 +1,36 @@
+name: Build & Release (Windows installer)
+
+# 打一个 v 开头的标签就会触发：GitHub 用 Windows 机器自动构建安装包并发布到 Releases
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: {}   # 也可在 Actions 页面手动点“Run workflow”
+
+permissions:
+  contents: write          # 允许创建 Release / 上传附件（用内置 GITHUB_TOKEN，无需额外密钥）
+
+jobs:
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build Windows installer
+        run: npm run dist:win
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/*.exe
+            release/latest.yml
+            release/*.blockmap
+          generate_release_notes: true
